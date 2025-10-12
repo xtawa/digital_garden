@@ -29,8 +29,6 @@ jobs:
           # 构造正确的 Aliyun OSS Endpoint: oss-${REGION}.aliyuncs.com
           # 假设 COS_REGION 变量存储的是 Aliyun 地区的 ID (如 cn-shanghai)
           ENDPOINT="oss-${{ secrets.COS_REGION }}.aliyuncs.com"
-          echo "DEBUG: 原始地区 Secret: ${{ secrets.COS_REGION }}" 
-          echo "DEBUG: 正在使用的 OSS Endpoint: $ENDPOINT" 
 
           # 创建配置文件 ~/.ossutilconfig，ossutil 会使用这个文件连接
           echo "[Credentials]" > ~/.ossutilconfig
