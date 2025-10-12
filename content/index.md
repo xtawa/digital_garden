@@ -1,5 +1,7 @@
 ---
 title: 欢迎来到Coisini洛的数字花园
+tags:
+  - general
 ---
 
 hello 👋，我是 Coisini洛
