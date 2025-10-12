@@ -19,6 +19,7 @@ jobs:
           fetch-depth: 1 
 
       # 2️⃣ 安装并配置 ossutil（阿里云 OSS 官方 CLI）
+      # !! 此步骤取代了 git9527/setup-coscli@v2 !!
       - name: 安装并配置 ossutil
         run: |
           # 安装 ossutil
@@ -29,7 +30,7 @@ jobs:
           # 假设 COS_REGION 变量存储的是 Aliyun 地区的 ID (如 cn-shanghai)
           ENDPOINT="oss-${{ secrets.COS_REGION }}.aliyuncs.com"
 
-          # 创建配置文件 ~/.ossutilconfig
+          # 创建配置文件 ~/.ossutilconfig，ossutil 会使用这个文件连接
           echo "[Credentials]" > ~/.ossutilconfig
           echo "language = EN" >> ~/.ossutilconfig
           echo "endpoint = $ENDPOINT" >> ~/.ossutilconfig
@@ -58,9 +59,8 @@ jobs:
             touch content/.gitkeep
           fi
 
-          # 执行同步 (使用 ossutil cp -r 进行递归复制)
-          # OSS 的路径格式是 oss://<Bucket>/<Path>
-          # **注意：ossutil 会自动从配置中读取 Endpoint 和 Bucket，但为了明确，我们仍使用完整的 oss:// 路径**
+          # **!!! 核心修改点：使用 ossutil cp -r 替换 coscli sync !!!**
+          # 执行同步，使用 ossutil 的递归复制命令
           ossutil cp -r \
             oss://${{ secrets.COS_BUCKET }}/quartz/content/ \
             ./content/
