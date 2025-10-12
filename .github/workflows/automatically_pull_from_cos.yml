@@ -1,14 +1,14 @@
-name: 同步COS到Obsidian仓库
+name: 同步（阿里云）OSS到Obsidian仓库
 
 on:
-  # 每 6 小时自动同步一次（UTC 时间）
+  # 每 3 小时自动同步一次（UTC 时间）
   schedule:
     - cron: '0 */3 * * *'
   # 允许手动触发
   workflow_dispatch:
 
 jobs:
-  sync-from-cos:
+  sync-from-oss: # Job 名称更改，以反映 OSS 服务
     runs-on: ubuntu-latest
 
     steps:
@@ -16,20 +16,30 @@ jobs:
       - name: 检出仓库
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1     # 只拉取最新提交即可，速度更快
+          fetch-depth: 1 
 
-      # 2️⃣ 安装并配置 coscli（官方 CLI，支持 sync）
-      - name: 安装并配置 coscli
-        uses: git9527/setup-coscli@v2
-        with:
-          region:      ${{ secrets.COS_REGION }}      # ap-shanghai 等
-          secret-id:   ${{ secrets.COS_SECRET_ID }}
-          secret-key:  ${{ secrets.COS_SECRET_KEY }}
-          bucket:      ${{ secrets.COS_BUCKET }}      # mybucket-1234567890
-          coscli-version: 'v0.12.0-beta'             # 指定具体版本号而非 latest
+      # 2️⃣ 安装并配置 ossutil（阿里云 OSS 官方 CLI）
+      - name: 安装并配置 ossutil
+        run: |
+          # 安装 ossutil
+          sudo wget -q http://gosspublic.alicdn.com/ossutil/1.7.15/ossutil64 -O /usr/local/bin/ossutil
+          sudo chmod 755 /usr/local/bin/ossutil
+          
+          # 构造正确的 Aliyun OSS Endpoint: oss-${REGION}.aliyuncs.com
+          # 假设 COS_REGION 变量存储的是 Aliyun 地区的 ID (如 cn-shanghai)
+          ENDPOINT="oss-${{ secrets.COS_REGION }}.aliyuncs.com"
 
-      # 3️⃣ 从 COS 下载到本地 content/（保持完全一致，但保留 .gitkeep）
-      - name: 拉取 COS 文件到 content/
+          # 创建配置文件 ~/.ossutilconfig
+          echo "[Credentials]" > ~/.ossutilconfig
+          echo "language = EN" >> ~/.ossutilconfig
+          echo "endpoint = $ENDPOINT" >> ~/.ossutilconfig
+          echo "accessKeyID = ${{ secrets.COS_SECRET_ID }}" >> ~/.ossutilconfig
+          echo "accessKeySecret = ${{ secrets.COS_SECRET_KEY }}" >> ~/.ossutilconfig
+          
+          echo "ossutil 配置完成，Endpoint 使用：$ENDPOINT ✅"
+          
+      # 3️⃣ 从 OSS 下载到本地 content/（保持完全一致，但保留 .gitkeep）
+      - name: 拉取 OSS 文件到 content/
         run: |
           # 自定义的重要文件，需要备份和恢复
           mkdir -p /tmp/content_backup
@@ -45,36 +55,34 @@ jobs:
           if [ -f "/tmp/content_backup/.gitkeep" ]; then
             cp /tmp/content_backup/.gitkeep content/
           else
-            # 如果不存在，创建一个空的 .gitkeep 文件
             touch content/.gitkeep
           fi
 
-          # 执行同步，使用递归模式
-          coscli sync \
-            --thread-num 8 \
-            --recursive \
-            cos://${{ secrets.COS_BUCKET }}/quartz/content/ \
-            content/ \
-            -e cos.${{ secrets.COS_REGION }}.aliyuncs.com
-
+          # 执行同步 (使用 ossutil cp -r 进行递归复制)
+          # OSS 的路径格式是 oss://<Bucket>/<Path>
+          # **注意：ossutil 会自动从配置中读取 Endpoint 和 Bucket，但为了明确，我们仍使用完整的 oss:// 路径**
+          ossutil cp -r \
+            oss://${{ secrets.COS_BUCKET }}/quartz/content/ \
+            ./content/
+          
           # 确保 .gitkeep 在同步后仍然存在
           if [ ! -f "content/.gitkeep" ]; then
             touch content/.gitkeep
           fi
 
-          echo "COS 同步完成 ✅"
+          echo "OSS 同步完成 ✅"
 
-      # 4️⃣ 若有变动就提交
+      # 4️⃣ 若有变动就提交 (保持不变)
       - name: Commit & push if changed
         env:
           TZ: Asia/Shanghai
         run: |
-          git config user.name  "COS Sync Bot"
+          git config user.name  "OSS Sync Bot"
           git config user.email "bot@users.noreply.github.com"
 
           if [[ -n $(git status --porcelain) ]]; then
             git add -A
-            git commit -m "chore: sync notes from COS $(date '+%Y-%m-%d %H:%M:%S')"
+            git commit -m "chore: sync notes from OSS $(date '+%Y-%m-%d %H:%M:%S')"
             git push
             echo "已检测到变动并推送 🚀"
           else
