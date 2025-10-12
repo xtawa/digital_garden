@@ -11,9 +11,9 @@ tags:
 
 ==Part1==按区域分类
 
-[[quartz/content/transferposts|🎭迁移内容]] ==迁移自旧博客的文章，也相当于提供了markdown格式的在线备份==
+[[transferposts|🎭迁移内容]] ==迁移自旧博客的文章，也相当于提供了markdown格式的在线备份==
 
-[[quartz/content/studynote|🧐学习笔记]] ==记录学习心得==
+[[studynote|🧐学习笔记]] ==记录学习心得==
 
 
 
