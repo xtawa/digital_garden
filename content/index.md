@@ -31,4 +31,3 @@ workflow文件会每3小时从对象存储库自动拉取内容，此workflow借
 
 ## References
 [**oldwinterの数字花园**](https://notes.oldwinter.top/)
-![[9544eb10db7d47490dd045fad8659e1d.gif]]
