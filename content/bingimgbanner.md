@@ -1,9 +1,12 @@
 ---
-title: "为Fuwari主题Banner设置每日Bing壁纸"
-description: 
+title: 为Fuwari主题Banner设置每日Bing壁纸
+description:
 date: 2025-07-17
-tags: ["legacy","transferred","guides"]
-是否完成: true
+tags:
+  - legacy
+  - transferred
+  - guides
+是否完成: false
 ---
 #### 为Fuwari主题Banner设置每日Bing壁纸
 
